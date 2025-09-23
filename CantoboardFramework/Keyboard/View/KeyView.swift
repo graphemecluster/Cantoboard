@@ -582,8 +582,10 @@ extension KeyView {
             defaultChildKeyCapTitle = keyCap.defaultChildKeyCapTitle
         }
         
-        let defaultKeyCapIndex: Int
-        defaultKeyCapIndex = keyCaps.firstIndex(where: { $0.buttonText == defaultChildKeyCapTitle || $0.isRimeTone }) ?? 0
+        let defaultKeyCapIndex: Int =
+            keyCaps.firstIndex { $0.isRimeTone } ??
+            keyCaps.firstIndex { $0 == "\"" || $0 == "'" } ??
+            keyCaps.firstIndex { $0.buttonText == defaultChildKeyCapTitle } ?? 0
         popupView.setup(keyCaps: keyCaps, defaultKeyCapIndex: defaultKeyCapIndex, direction: popupDirection)
         selectedAction = popupView.selectedAction
         
@@ -602,16 +604,6 @@ extension KeyView {
     
     private func computePopupDirection() -> KeyPopupView.PopupDirection {
         guard let superview = superview else { return .middle }
-        
-        // For tonal input keys, always show popup on the right.
-        if keyboardState?.activeSchema.supportCantoneseTonalInput ?? false &&
-           Settings.cached.toneInputMode == .longPress,
-            case .character(let c, _, _) = keyCap {
-            switch c.lowercased() {
-            case "f", "g", "h", "c", "v", "b": return .middle
-            default: ()
-            }
-        }
         
         let screenEdgeThreshold = bounds.width / 2
 
@@ -635,7 +627,32 @@ extension KeyView {
     
     private func computeKeyCap(isLongPress: Bool) -> [KeyCap] {
         if isLongPress {
-            return keyCap.childrenKeyCaps
+            var childrenKeyCaps = keyCap.childrenKeyCaps
+            switch keyCap {
+            case .currency:
+                let localCurrencySymbolKeyCap = KeyCap(SessionState.main.currencySymbol)
+                childrenKeyCaps.removeAll(where: { $0 == localCurrencySymbolKeyCap })
+                childrenKeyCaps.insert(localCurrencySymbolKeyCap, at: childrenKeyCaps.count / 2 - (keyboardState?.keyboardIdiom == .pad(.padShort) ? 3 : 2))
+            case "@" where keyboardState?.keyboardIdiom == .phone:
+                childrenKeyCaps.removeAll(where: { $0 == "@" })
+                childrenKeyCaps.insert("@", at: 1)
+            case "0" where keyboardState?.keyboardIdiom.isPad ?? false:
+                childrenKeyCaps.removeAll(where: { $0 == "0" })
+                childrenKeyCaps.insert("0", at: keyboardState?.keyboardIdiom == .pad(.padFull5Rows) ? 3 : 1)
+            case .doubleQuote where keyboardState?.keyboardIdiom.isPadFull ?? false:
+                childrenKeyCaps.removeAll(where: { $0 == "\"" })
+                childrenKeyCaps.insert("\"", at: 0)
+            case "<", ">", "〈", "〉":
+                if keyboardState?.keyboardIdiom.isPad ?? false {
+                    childrenKeyCaps.removeAll(where: { $0 == keyCap })
+                    childrenKeyCaps.insert(keyCap, at: keyboardState?.keyboardIdiom == .pad(.padFull5Rows) ? 2 : 3)
+                    if keyboardState?.keyboardIdiom == .pad(.padFull5Rows) {
+                        childrenKeyCaps = Array(childrenKeyCaps[2..<6]) + Array(childrenKeyCaps[0..<2]) + Array(childrenKeyCaps[6...])
+                    }
+                }
+            default: ()
+            }
+            return childrenKeyCaps
         } else {
             return [keyCap]
         }
