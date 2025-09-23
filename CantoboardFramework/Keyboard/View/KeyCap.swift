@@ -278,22 +278,26 @@ indirect enum KeyCap: Equatable, ExpressibleByStringLiteral {
         case .toggleCharForm(let charForm): return charForm.caption
         case .singleQuote: return "′"
         case .doubleQuote: return "″"
-        case "（": return "（⠀"
-        case "）": return "⠀）"
-        case "「": return "「⠀"
-        case "」": return "⠀」"
-        case "『": return "『⠀"
-        case "』": return "⠀』"
-        case "〈": return "〈⠀"
-        case "〉": return "⠀〉"
-        case "《": return "《⠀"
-        case "》": return "⠀》"
+        case "（", "「", "『", "〈", "《", "｛", "【", "〔", "〚", "〖", "〘":
+            if #available(iOS 17, *) {
+                // In iOS 17 or above, most characters are automatically kerned.
+                return String(character!)
+            } else {
+                return String(character!) + "⠀"
+            }
+        case "）", "」", "』", "〉", "》", "｝", "】", "〕", "〛", "〗", "〙":
+            if #available(iOS 17, *) {
+                return String(character!)
+            } else {
+                return "⠀" + String(character!)
+            }
         case "［": return "［⠀"
         case "］": return "⠀］"
-        case "｛": return "｛⠀"
-        case "｝": return "⠀｝"
-        case "【": return "【⠀"
-        case "】": return "⠀】"
+        case "｟": return "｟⠀"
+        case "｠": return "⠀｠"
+        case "〝": return "〝⠀"
+        case "〞": return "⠀〞"
+        case "〟": return "⠀〟"
         case "\t": return nil
         case "——": return "⸻"
         case .character(let text, _, _): return text
@@ -369,8 +373,9 @@ indirect enum KeyCap: Equatable, ExpressibleByStringLiteral {
              "－", "／", "：", "；", "（", "）", "＠", "、", "⋯", "⋯⋯", "＆",
              "１", "２", "３", "４", "５", "６", "７", "８", "９", "０",
              "［", "］", "｛", "｝", "＃", "％", "＾", "＊", "＋", "＝",
-             "＿", "＼", "｜", "～", "〈", "＜", "＞", "〉",
-             "＄", "＂", "＇": return "全"
+             "＿", "￣", "＼", "｜", "～", "＜", "＞", "〈", "〉", "｟", "｠", "《", "》",
+             "＄", "￥", "￦", "￡", "￠", "＂", "＇", "〝", "〞", "〟", "｀": return "全"
+        case "′", "″", "×", "√", "∕", "÷": return "數"
         default: return nil
         }
     }
@@ -415,78 +420,78 @@ indirect enum KeyCap: Equatable, ExpressibleByStringLiteral {
         case "7": return ["⑺", "７", "七", "7", "柒", "⑦", "⒎", "❼", "㊆", "㈦"]
         case "8": return ["８", "八", "8", "捌", "⑧", "⑻", "⒏", "❽", "㊇", "㈧"]
         case "9": return ["九", "9", "玖", "９", "⑨", "⑼", "⒐", "❾", "㊈", "㈨"]
-        case "0": return ["0", "０", "零", "十", "拾", "⓪", "°"]
+        case "0": return ["0", "０", "〇", "零", "⓪", "🄀", "⓿", "十", "拾", "°"]
         // 123 2nd row
-        case "-": return ["-", "－", "–", "—", "•"]
-        case "/": return ["/", "／", "\\", "÷"]
+        case "-": return ["-", "－", "–", "—", "‑", "•"]
+        case "/": return ["/", "／", "✓", "√", "∕", "÷"]
         case ":": return [":", "："]
         case ";": return [";", "；"]
-        case "(": return ["(", "（"]
-        case ")": return [")", "）"]
-        case .doubleQuote: return ["\"", "＂", "”", "“", "„", "»", "«"]
+        case "(": return ["(", "（", "⸨", "｟"]
+        case ")": return [")", "）", "⸩", "｠"]
+        case .doubleQuote: return ["”", "“", "\"", "„", "＂", "″", "〃", "»", "«"]
         case "「": return ["「", "『", "“", "‘", "｢"]
         case "」": return ["」", "』", "”", "’", "｣"]
         // 123 3rd row
         case ".": return [".", "。", "．", "…", "⋯", "⋯⋯"]
         case ",": return [",", "，"]
         case "､": return ["､", "、"]
-        case "^_^": return ["^_^", "^‿^", ">_<"]
+        case "^_^": return ["^‿^", "^_^", ">_<"]
         case "?": return ["?", "？", "¿"]
         case "!": return ["!", "！", "¡"]
-        case .singleQuote: return ["'", "＇", "’", "‘", "`", "｀"]
+        case .singleQuote: return ["`", "'", "’", "‘", "＇", "｀", "′", "›", "‹"]
         // 123 4rd row
         case "@": return ["@", "＠"]
         // #+= 1st row
-        case "[": return ["[", "［", "【", "〔", "「"]
-        case "]": return ["]", "］", "】", "〕", "」"]
+        case "[": return ["[", "［", "【", "〔", "〚", "〖", "〘"]
+        case "]": return ["]", "］", "】", "〕", "〛", "〗", "〙"]
         case "{": return ["{", "｛"]
         case "}": return ["}", "｝"]
         case "#": return ["#", "＃"]
-        case "%": return ["%", "％", "‰"]
-        case "^": return ["^", "＾", "↑", "↓"]
-        case "*": return ["*", "＊", "×"]
-        case "+": return ["+", "＋"]
-        case "=": return ["=", "≠", "≈", "＝"]
+        case "%": return ["%", "％", "‰", "‱"]
+        case "^": return ["^", "＾", "↓", "↑"]
+        case "*": return ["*", "＊", "×", "※", "✗", "✓"]
+        case "+": return ["+", "＋", "∓", "±"]
+        case "=": return ["=", "≠", "≡", "≈", "≒", "≅", "＝"]
         // #+= 2nd row
-        case "_": return ["_", "＿"]
+        case "_": return ["_", "‾‾", "＿", "￣"]
         case "\\": return ["\\", "＼"]
-        case "|": return ["|", "｜"]
+        case "|": return ["|", "｜", "¦"]
         case "~": return ["~", "～"]
-        case "<": return ["<", "〈", "＜", "←"]
-        case ">": return [">", "〉", "＞", "→"]
-        case "«": return ["«", "《", "⇔"]
-        case "»": return ["»", "》", "⇒"]
-        case "&": return ["＆", "&", "§"]
-        case "•": return ["•", "·", "．", "°"]
+        case "<": return ["＜", "〈", "<", "‹", "←", "↔"]
+        case ">": return ["＞", "〉", ">", "›", "→", "↔"]
+        case "«": return ["«", "《", "⇐", "⇔"]
+        case "»": return ["»", "》", "⇒", "⇔"]
+        case "&": return ["&", "＆", "§", "¶"]
+        case "•": return ["•", "·", "°", "○"]
         // #+= 4th row
         case "…": return ["…", "⋯"]
         // 123 2nd row full width
-        case "—": return ["—", "–", "-", "－", "·"]
-        case "／": return ["／", "/", "\\", "÷"]
+        case "—": return ["—", "–", "-", "－", "‑", "·"]
+        case "／": return ["／", "/", "✓", "√", "∕", "÷"]
         case "：": return ["：", ":"]
         case "；": return ["；", ";"]
-        case "（": return ["（", "("]
-        case "）": return ["）", ")"]
+        case "（": return ["（", "(", "⸨", "｟"]
+        case "）": return ["）", ")", "⸩", "｠"]
         // 123 3rd row full width
         case "。": return ["。", ".", "．", "…", "⋯", "⋯⋯"]
-        case "，": return ["，", ", "]
+        case "，": return ["，", ","]
         case "、": return ["､", "、"]
         case "？": return ["？", "?", "¿"]
         case "！": return ["！", "!", "¡"]
         // #+= 1st row full width
-        case "［": return ["［", "[", "【", "〔"]
-        case "］": return ["］", "]", "】", "〕"]
+        case "［": return ["［", "[", "【", "〔", "〚", "〖", "〘"]
+        case "］": return ["］", "]", "】", "〕", "〛", "〗", "〙"]
         case "｛": return ["｛", "{"]
         case "｝": return ["｝", "}"]
         // #+= 2nd row full width
         case "＼": return ["＼", "\\"]
-        case "｜": return ["｜", "|"]
+        case "｜": return ["｜", "|", "¦"]
         case "～": return ["～", "~"]
-        case "〈": return ["〈", "<", "＜", "←"]
-        case "〉": return ["〉", ">", "＞", "→"]
-        case "《": return ["《", "«", "⇔"]
-        case "》": return ["》", "»", "⇒"]
-        case "·": return ["·", "．", "•", "°"]
+        case "〈": return ["＜", "<", "〈", "‹", "←", "↔"]
+        case "〉": return ["＞", ">", "〉", "›", "→", "↔"]
+        case "《": return ["《", "«", "⇐", "⇔"]
+        case "》": return ["》", "»", "⇒", "⇔"]
+        case "·": return ["·", "•", "°", "○"]
         // #+= 4th row full width
         case "⋯": return ["…", "⋯"]
         case .currency:
